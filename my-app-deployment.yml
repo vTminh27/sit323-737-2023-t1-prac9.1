@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app
+        image: minhvu220904/my-application:latest
+        ports:
+        - containerPort: 8080  # Port that your application listens on
+        env:  # Environment variables
+        - name: MONGODB_HOST  # The host of your MongoDB database
+          value: "my-release-mongodb.default.svc.cluster.local"
+        - name: MONGODB_USER  # The MongoDB user, value from the secret 'mongodb-secret'
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongodb-username
+        - name: MONGODB_PASSWORD  # The MongoDB password, value from the secret 'mongodb-secret'
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongodb-password
+        - name: MONGODB_DATABASE  # The MongoDB database name
+          value: "database"
+        volumeMounts:  # Define where to mount the volume in the container
+        - mountPath: "/app/data"  # Change this to a suitable directory in your container
+          name: mongodb-volume
+      volumes:  # Define the PersistentVolumeClaim to use for the volume
+      - name: mongodb-volume
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
